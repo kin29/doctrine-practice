@@ -176,24 +176,22 @@ setし直す前のtomatoはDELETEされない
 ```shell
 doctrine.DEBUG: "START TRANSACTION" [] []
 doctrine.DEBUG: INSERT INTO delicious_pizza (id) VALUES (null) [] []
-doctrine.DEBUG: INSERT INTO tomato (pizza_id) VALUES (?) {"1":19} []
+doctrine.DEBUG: INSERT INTO tomato (pizza_id) VALUES (?) {"1":28} []
 doctrine.DEBUG: "COMMIT" [] []
 doctrine.DEBUG: "START TRANSACTION" [] []
-doctrine.DEBUG: INSERT INTO tomato (pizza_id) VALUES (?) {"1":null} []
+doctrine.DEBUG: INSERT INTO tomato (pizza_id) VALUES (?) {"1":28} []
 doctrine.DEBUG: "COMMIT" [] []
 ```
 
 #### orphanRemoval=true
 setし直す前のtomatoはDELETEされる
-
-setし直したtomatoはdelicious_pizzaに紐付かない
 ```shell
 doctrine.DEBUG: "START TRANSACTION" [] []
 doctrine.DEBUG: INSERT INTO delicious_pizza (id) VALUES (null) [] []
-doctrine.DEBUG: INSERT INTO tomato (pizza_id) VALUES (?) {"1":20} []
+doctrine.DEBUG: INSERT INTO tomato (pizza_id) VALUES (?) {"1":27} []
 doctrine.DEBUG: "COMMIT" [] []
 doctrine.DEBUG: "START TRANSACTION" [] []
-doctrine.DEBUG: DELETE FROM tomato WHERE pizza_id = ? [20] [] //削除している
-doctrine.DEBUG: INSERT INTO tomato (pizza_id) VALUES (?) {"1":null} []
+doctrine.DEBUG: DELETE FROM tomato WHERE pizza_id = ? [27] [] //削除している
+doctrine.DEBUG: INSERT INTO tomato (pizza_id) VALUES (?) {"1":27} []
 doctrine.DEBUG: "COMMIT" [] []
 ```

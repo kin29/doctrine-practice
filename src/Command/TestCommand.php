@@ -37,6 +37,7 @@ class TestCommand extends Command
         $tomato2 = new Tomato();
         $tomatoCollection2 = new ArrayCollection([$tomato]);
         $pizza->setTomatoes($tomatoCollection2);
+        $tomato2->setPizza($pizza);
 
         $this->em->persist($tomato2);
         $this->em->persist($pizza);
