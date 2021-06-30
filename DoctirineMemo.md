@@ -1,9 +1,9 @@
 # cascade={"remove"}、 onDelete="CASCADE"、 orphanRemoval=trueの違いメモ
 
-- どれも使わない時...(1)
-- `cascade={"remove"}`...(2)
-- `onDelete="CASCADE`...(3)
-- `orphanRemoval=true`...(4)
+- [どれも使わない時...(1)](#どれも使わない時...(1))
+- [cascade={"remove"}...(2)](#cascade={"remove"}...(2))
+- [onDelete="CASCADE...(3)](#onDelete="CASCADE...(3))
+- [orphanRemoval=true...(4)](#orphanRemoval=true...(4))
 
 の4パターンで、以下Commandを実行
 ```shell
@@ -32,6 +32,7 @@
 ## どれも使わない時...(1)
 外部キー制約のために、DELETE FROM delicious_pizza...ができない
 ```shell
+// bin/console app:test実行後
 // dev.log
 doctrine.DEBUG: "START TRANSACTION" [] []
 doctrine.DEBUG: INSERT INTO delicious_pizza (id) VALUES (null) [] []
@@ -44,7 +45,7 @@ console.CRITICAL: Error thrown while running command "app:test". Message: "An ex
 console.DEBUG: Command "app:test" exited with code "1" {"command":"app:test","code":1} []
 ```
 
-## `cascade={"remove"}`...(2)
+## cascade={"remove"}...(2)
 親Entityの子Entityにあたるプロパティに`cascade={"remove"}`を付与
 ```php
 class DeliciousPizza
@@ -59,6 +60,7 @@ class DeliciousPizza
 
 親Entity(delicious_pizza)をremove(`$em->remove($pizza)`)したとき、子Entity(tomato)と親Entityの両テーブルをDELETEしてくれる。
 ```shell
+// bin/console app:test実行後
 // dev.log
 doctrine.DEBUG: "START TRANSACTION" [] []
 doctrine.DEBUG: INSERT INTO delicious_pizza (id) VALUES (null) [] []
@@ -72,6 +74,7 @@ doctrine.DEBUG: "COMMIT" [] []
 
 子Entity(tomato)をremove(`$em->remove($tomato)`)したときは、子Entity(tomato)のみDELETEしてくれる。
 ```shell
+// bin/console app:test実行後
 // dev.log
 doctrine.DEBUG: "COMMIT" [] []
 doctrine.DEBUG: "START TRANSACTION" [] []
@@ -83,3 +86,40 @@ doctrine.DEBUG: DELETE FROM tomato WHERE id = ? [4] []
 doctrine.DEBUG: "COMMIT" [] []
 ```
 
+## onDelete="CASCADE...(3)
+**migrationの変更があるので`bin/console d:m:diff & bin/console d:m:m`する必要がある**
+
+JOINCOLUMする子Entityの親Entityのプロパティに`onDelete="CASCADE"`を付与
+```php
+/**
+ * @ORM\Entity(repositoryClass=TomatoRepository::class)
+ */
+class Tomato
+{
+    ...
+    /**
+     * @ORM\ManyToOne(targetEntity=DeliciousPizza::class, inversedBy="tomatoes")
+     * @ORM\JoinColumn(name="pizza_id", referencedColumnName="id", onDelete="CASCADE")
+     */
+    private ?DeliciousPizza $pizza;
+```
+
+SQL(作成されたmigrations)をみると外部キー制約に`ON DELETE CASCADE`が追加されたことがわかる
+```diff
+- ALTER TABLE tomato ADD CONSTRAINT FK_2C14401AD41D1D42 FOREIGN KEY (pizza_id) REFERENCES delicious_pizza (id)
++ ALTER TABLE tomato ADD CONSTRAINT FK_2C14401AD41D1D42 FOREIGN KEY (pizza_id) REFERENCES delicious_pizza (id) ON DELETE CASCADE
+```
+
+SQL的にはDELETE FROM delicious_pizza...しかしてないが、tomatoテーブルからもid=6は削除されていた。
+```shell
+// bin/console d:m:diff & bin/console d:m:m実行後に
+// bin/console app:test実行
+// dev.log
+doctrine.DEBUG: "START TRANSACTION" [] []
+doctrine.DEBUG: INSERT INTO delicious_pizza (id) VALUES (null) [] []
+doctrine.DEBUG: INSERT INTO tomato (pizza_id) VALUES (?) {"1":6} []
+doctrine.DEBUG: "COMMIT" [] []
+doctrine.DEBUG: "START TRANSACTION" [] []
+doctrine.DEBUG: DELETE FROM delicious_pizza WHERE id = ? [6] []
+doctrine.DEBUG: "COMMIT" [] []
+```

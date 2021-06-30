@@ -20,7 +20,7 @@ class DeliciousPizza
     private ?int $id;
 
     /**
-     * @ORM\OneToMany(targetEntity=Tomato::class, mappedBy="pizza", cascade={"remove"})
+     * @ORM\OneToMany(targetEntity=Tomato::class, mappedBy="pizza")
      */
     private Collection $tomatoes;
 
