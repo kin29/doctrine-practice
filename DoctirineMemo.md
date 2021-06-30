@@ -1,9 +1,14 @@
 # cascade={"remove"}、 onDelete="CASCADE"、 orphanRemoval=trueの違いメモ
 
+## reference
+[https://tech.quartetcom.co.jp/2016/12/22/doctrine-cascade-remove/#4-orphanremovaltrue](https://tech.quartetcom.co.jp/2016/12/22/doctrine-cascade-remove/#4-orphanremovaltrue)
+
+## 目次
 - [どれも使わない時...(1)](#どれも使わない時...(1))
 - [cascade={"remove"}...(2)](#cascade={"remove"}...(2))
 - [onDelete="CASCADE...(3)](#onDelete="CASCADE...(3))
 - [orphanRemoval=true...(4)](#orphanRemoval=true...(4))
+- [cascade={"remove"}とorphanRemoval=trueの違い](#[wip]cascade={"remove"}とorphanRemoval=trueの違い)
 
 の4パターンで、以下Commandを実行
 ```shell
@@ -29,7 +34,7 @@
  ...
 ```
 
-## どれも使わない時...(1)
+### どれも使わない時...(1)
 外部キー制約のために、DELETE FROM delicious_pizza...ができない
 ```shell
 // bin/console app:test実行後
@@ -45,7 +50,7 @@ console.CRITICAL: Error thrown while running command "app:test". Message: "An ex
 console.DEBUG: Command "app:test" exited with code "1" {"command":"app:test","code":1} []
 ```
 
-## cascade={"remove"}...(2)
+### cascade={"remove"}...(2)
 親Entityの子Entityにあたるプロパティに`cascade={"remove"}`を付与
 ```php
 class DeliciousPizza
@@ -86,7 +91,7 @@ doctrine.DEBUG: DELETE FROM tomato WHERE id = ? [4] []
 doctrine.DEBUG: "COMMIT" [] []
 ```
 
-## onDelete="CASCADE...(3)
+### onDelete="CASCADE...(3)
 **migrationの変更があるので`bin/console d:m:diff & bin/console d:m:m`する必要がある**
 
 JOINCOLUMする子Entityの親Entityのプロパティに`onDelete="CASCADE"`を付与
@@ -124,4 +129,70 @@ doctrine.DEBUG: DELETE FROM delicious_pizza WHERE id = ? [6] []
 doctrine.DEBUG: "COMMIT" [] []
 ```
 
-## orphanRemoval=true...(4)
+### orphanRemoval=true...(4)
+親Entityの子Entityにあたるプロパティに`orphanRemoval=true`を付与
+```php
+class DeliciousPizza
+{
+    ...
+    /**
+     * @ORM\OneToMany(targetEntity=Tomato::class, mappedBy="pizza", orphanRemoval=true)
+     */
+    private Collection $tomatoes;
+```
+
+親Entity(delicious_pizza)をremove(`$em->remove($pizza)`)したとき、子Entity(tomato)と親Entityの両テーブルをDELETEしてくれる。  
+→ cascade={"remove"}...(2)と同じ結果
+```shell
+// bin/console app:test実行
+// dev.log
+doctrine.DEBUG: "START TRANSACTION" [] []
+doctrine.DEBUG: INSERT INTO delicious_pizza (id) VALUES (null) [] []
+doctrine.DEBUG: INSERT INTO tomato (pizza_id) VALUES (?) {"1":8} []
+doctrine.DEBUG: "COMMIT" [] []
+doctrine.DEBUG: "START TRANSACTION" [] []
+doctrine.DEBUG: DELETE FROM tomato WHERE id = ? [8] []
+doctrine.DEBUG: DELETE FROM delicious_pizza WHERE id = ? [8] []
+doctrine.DEBUG: "COMMIT" [] []
+```
+
+子Entity(tomato)をremove(`$em->remove($tomato)`)したときは、子Entity(tomato)のみDELETEしてくれる。  
+→ cascade={"remove"}...(2)と同じ結果
+```shell
+// bin/console app:test実行
+// dev.log
+doctrine.DEBUG: "START TRANSACTION" [] []
+doctrine.DEBUG: INSERT INTO delicious_pizza (id) VALUES (null) [] []
+doctrine.DEBUG: INSERT INTO tomato (pizza_id) VALUES (?) {"1":9} []
+doctrine.DEBUG: "COMMIT" [] []
+doctrine.DEBUG: "START TRANSACTION" [] []
+doctrine.DEBUG: DELETE FROM tomato WHERE id = ? [9] []
+doctrine.DEBUG: "COMMIT" [] []
+```
+
+### [wip]cascade={"remove"}とorphanRemoval=trueの違い
+cascade={"remove"}
+setし直す前のtomatoはDELETEされない
+```shell
+doctrine.DEBUG: "START TRANSACTION" [] []
+doctrine.DEBUG: INSERT INTO delicious_pizza (id) VALUES (null) [] []
+doctrine.DEBUG: INSERT INTO tomato (pizza_id) VALUES (?) {"1":19} []
+doctrine.DEBUG: "COMMIT" [] []
+doctrine.DEBUG: "START TRANSACTION" [] []
+doctrine.DEBUG: INSERT INTO tomato (pizza_id) VALUES (?) {"1":null} []
+doctrine.DEBUG: "COMMIT" [] []
+```
+
+orphanRemoval=true
+setし直す前のtomatoはDELETEされる
+serし直したtomatoはdelicious_pizzaに紐付かない? :thinking_face:
+```shell
+doctrine.DEBUG: "START TRANSACTION" [] []
+doctrine.DEBUG: INSERT INTO delicious_pizza (id) VALUES (null) [] []
+doctrine.DEBUG: INSERT INTO tomato (pizza_id) VALUES (?) {"1":20} []
+doctrine.DEBUG: "COMMIT" [] []
+doctrine.DEBUG: "START TRANSACTION" [] []
+doctrine.DEBUG: DELETE FROM tomato WHERE pizza_id = ? [20] [] //削除している
+doctrine.DEBUG: INSERT INTO tomato (pizza_id) VALUES (?) {"1":null} []
+doctrine.DEBUG: "COMMIT" [] []
+```

@@ -42,6 +42,13 @@ class DeliciousPizza
         return $this->tomatoes;
     }
 
+    public function setTomatoes(Collection $tomatoes): self
+    {
+        $this->tomatoes = $tomatoes;
+
+        return $this;
+    }
+
     public function addTomato(Tomato $tomato): self
     {
         if (!$this->tomatoes->contains($tomato)) {

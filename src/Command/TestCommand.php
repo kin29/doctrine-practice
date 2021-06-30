@@ -4,6 +4,7 @@ namespace App\Command;
 
 use App\Entity\DeliciousPizza;
 use App\Entity\Tomato;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -25,15 +26,23 @@ class TestCommand extends Command
     {
         $pizza = new DeliciousPizza();
         $tomato = new Tomato();
-        $pizza->addTomato($tomato);
+        $tomatoCollection = new ArrayCollection([$tomato]);
+        $pizza->setTomatoes($tomatoCollection);
         $tomato->setPizza($pizza);
 
         $this->em->persist($tomato);
         $this->em->persist($pizza);
         $this->em->flush();
 
+        $tomato2 = new Tomato();
+        $tomatoCollection2 = new ArrayCollection([$tomato]);
+        $pizza->setTomatoes($tomatoCollection2);
+
+        $this->em->persist($tomato2);
+        $this->em->persist($pizza);
+
         // データ削除
-        $this->em->remove($pizza);
+        //$this->em->remove($pizza);
         $this->em->flush();
 
         return Command::SUCCESS;
