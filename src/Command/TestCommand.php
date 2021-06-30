@@ -26,6 +26,7 @@ class TestCommand extends Command
     {
         $pizza = new DeliciousPizza();
         $tomato = new Tomato();
+        $tomato->setName('プチトマト');
         $tomatoCollection = new ArrayCollection([$tomato]);
         $pizza->setTomatoes($tomatoCollection);
         $tomato->setPizza($pizza);
@@ -35,6 +36,7 @@ class TestCommand extends Command
         $this->em->flush();
 
         $tomato2 = new Tomato();
+        $tomato2->setName('フルーツトマト');
         $tomatoCollection2 = new ArrayCollection([$tomato]);
         $pizza->setTomatoes($tomatoCollection2);
         $tomato2->setPizza($pizza);

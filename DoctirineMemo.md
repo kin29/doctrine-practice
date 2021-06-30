@@ -170,28 +170,87 @@ doctrine.DEBUG: DELETE FROM tomato WHERE id = ? [9] []
 doctrine.DEBUG: "COMMIT" [] []
 ```
 
-### [wip]cascade={"remove"}とorphanRemoval=trueの違い
+### cascade={"remove"}とorphanRemoval=trueの違い
+以下Command内容に変更実行すると違いがわかる
+```php
+class TestCommand extends Command
+{
+   ...
+    protected function execute(InputInterface$input, OutputInterface $output): int
+    {
+        $pizza = new DeliciousPizza();
+        $tomato = new Tomato();
+        $tomato->setName('プチトマト');
+        $tomatoCollection = new ArrayCollection([$tomato]);
+        $pizza->setTomatoes($tomatoCollection);
+        $tomato->setPizza($pizza);
+
+        $this->em->persist($tomato);
+        $this->em->persist($pizza);
+        $this->em->flush();
+
+        $tomato2 = new Tomato();
+        $tomato2->setName('フルーツトマト');
+        $tomatoCollection2 = new ArrayCollection([$tomato]);
+        $pizza->setTomatoes($tomatoCollection2);
+        $tomato2->setPizza($pizza);
+
+        $this->em->persist($tomato2);
+        $this->em->persist($pizza);
+
+        // データ削除
+        //$this->em->remove($pizza);
+        $this->em->flush();
+
+        return Command::SUCCESS;
+    }
+}
+```
+
 #### cascade={"remove"}
-setし直す前のtomatoはDELETEされない
+setし直す前のtomato(プチトマト)はDELETEされない
 ```shell
+// bin/console app:test実行後
+// dev.log
 doctrine.DEBUG: "START TRANSACTION" [] []
 doctrine.DEBUG: INSERT INTO delicious_pizza (id) VALUES (null) [] []
-doctrine.DEBUG: INSERT INTO tomato (pizza_id) VALUES (?) {"1":28} []
+doctrine.DEBUG: INSERT INTO tomato (name, pizza_id) VALUES (?, ?) {"1":"プチトマト","2":30} []
 doctrine.DEBUG: "COMMIT" [] []
 doctrine.DEBUG: "START TRANSACTION" [] []
-doctrine.DEBUG: INSERT INTO tomato (pizza_id) VALUES (?) {"1":28} []
+doctrine.DEBUG: INSERT INTO tomato (name, pizza_id) VALUES (?, ?) {"1":"フルーツトマト","2":30} []
 doctrine.DEBUG: "COMMIT" [] []
+```
+```shell
+mysql> select * from tomato;
++----+----------+-----------------------+
+| id | pizza_id | name                  |
++----+----------+-----------------------+
+...
+| 44 |       30 | プチトマト              |
+| 45 |       30 | フルーツトマト           |
++----+----------+-----------------------+
 ```
 
 #### orphanRemoval=true
-setし直す前のtomatoはDELETEされる
+setし直す前のtomato(プチトマト)はDELETEされる
 ```shell
+// bin/console app:test実行後
+// dev.log
 doctrine.DEBUG: "START TRANSACTION" [] []
 doctrine.DEBUG: INSERT INTO delicious_pizza (id) VALUES (null) [] []
-doctrine.DEBUG: INSERT INTO tomato (pizza_id) VALUES (?) {"1":27} []
+doctrine.DEBUG: INSERT INTO tomato (name, pizza_id) VALUES (?, ?) {"1":"プチトマト","2":29} []
 doctrine.DEBUG: "COMMIT" [] []
 doctrine.DEBUG: "START TRANSACTION" [] []
-doctrine.DEBUG: DELETE FROM tomato WHERE pizza_id = ? [27] [] //削除している
-doctrine.DEBUG: INSERT INTO tomato (pizza_id) VALUES (?) {"1":27} []
+doctrine.DEBUG: DELETE FROM tomato WHERE pizza_id = ? [29] []
+doctrine.DEBUG: INSERT INTO tomato (name, pizza_id) VALUES (?, ?) {"1":"フルーツトマト","2":29} []
 doctrine.DEBUG: "COMMIT" [] []
+```
+```shell
+mysql> select * from tomato;
++----+----------+-----------------------+
+| id | pizza_id | name                  |
++----+----------+-----------------------+
+...
+| 43 |       29 | フルーツトマト           |
++----+----------+-----------------------+
 ```

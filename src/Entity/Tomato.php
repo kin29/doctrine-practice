@@ -23,6 +23,11 @@ class Tomato
      */
     private ?DeliciousPizza $pizza;
 
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
+    private $name;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -36,6 +41,18 @@ class Tomato
     public function setPizza(?DeliciousPizza $pizza): self
     {
         $this->pizza = $pizza;
+
+        return $this;
+    }
+
+    public function getName(): ?string
+    {
+        return $this->name;
+    }
+
+    public function setName(string $name): self
+    {
+        $this->name = $name;
 
         return $this;
     }
