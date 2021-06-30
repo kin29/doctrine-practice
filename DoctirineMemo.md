@@ -4,11 +4,11 @@
 [https://tech.quartetcom.co.jp/2016/12/22/doctrine-cascade-remove/#4-orphanremovaltrue](https://tech.quartetcom.co.jp/2016/12/22/doctrine-cascade-remove/#4-orphanremovaltrue)
 
 ## 目次
-- [どれも使わない時...(1)](#どれも使わない時...(1))
-- [cascade={"remove"}...(2)](#cascade={"remove"}...(2))
-- [onDelete="CASCADE...(3)](#onDelete="CASCADE...(3))
-- [orphanRemoval=true...(4)](#orphanRemoval=true...(4))
-- [cascade={"remove"}とorphanRemoval=trueの違い](#[wip]cascade={"remove"}とorphanRemoval=trueの違い)
+- [どれも使わない時...(1)](#どれも使わない時1)
+- [cascade={"remove"}...(2)](#cascaderemove2)
+- [onDelete="CASCADE...(3)](#ondeletecascade3)
+- [orphanRemoval=true...(4)](#orphanremovaltrue4)
+- [cascade={"remove"}とorphanRemoval=trueの違い](#wipcascaderemoveとorphanremovaltrueの違い)
 
 の4パターンで、以下Commandを実行
 ```shell
