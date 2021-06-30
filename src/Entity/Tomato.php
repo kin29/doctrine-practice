@@ -19,7 +19,7 @@ class Tomato
 
     /**
      * @ORM\ManyToOne(targetEntity=DeliciousPizza::class, inversedBy="tomatoes")
-     * @ORM\JoinColumn(name="pizza_id", referencedColumnName="id", onDelete="CASCADE")
+     * @ORM\JoinColumn(name="pizza_id", referencedColumnName="id")
      */
     private ?DeliciousPizza $pizza;
 

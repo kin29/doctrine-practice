@@ -123,3 +123,5 @@ doctrine.DEBUG: "START TRANSACTION" [] []
 doctrine.DEBUG: DELETE FROM delicious_pizza WHERE id = ? [6] []
 doctrine.DEBUG: "COMMIT" [] []
 ```
+
+## orphanRemoval=true...(4)
