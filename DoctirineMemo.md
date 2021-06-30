@@ -171,7 +171,7 @@ doctrine.DEBUG: "COMMIT" [] []
 ```
 
 ### [wip]cascade={"remove"}とorphanRemoval=trueの違い
-cascade={"remove"}
+#### cascade={"remove"}
 setし直す前のtomatoはDELETEされない
 ```shell
 doctrine.DEBUG: "START TRANSACTION" [] []
@@ -183,9 +183,10 @@ doctrine.DEBUG: INSERT INTO tomato (pizza_id) VALUES (?) {"1":null} []
 doctrine.DEBUG: "COMMIT" [] []
 ```
 
-orphanRemoval=true
+#### orphanRemoval=true
 setし直す前のtomatoはDELETEされる
-serし直したtomatoはdelicious_pizzaに紐付かない? :thinking_face:
+
+setし直したtomatoはdelicious_pizzaに紐付かない
 ```shell
 doctrine.DEBUG: "START TRANSACTION" [] []
 doctrine.DEBUG: INSERT INTO delicious_pizza (id) VALUES (null) [] []
