@@ -57,7 +57,7 @@ class DeliciousPizza
 ```
 
 
-親Entity(delicious_pizza)をremoveしたとき、子Entity(tomato)と親Entityの両テーブルをDELETEしてくれる。
+親Entity(delicious_pizza)をremove(`$em->remove($pizza)`)したとき、子Entity(tomato)と親Entityの両テーブルをDELETEしてくれる。
 ```shell
 // dev.log
 doctrine.DEBUG: "START TRANSACTION" [] []
@@ -67,6 +67,19 @@ doctrine.DEBUG: "COMMIT" [] []
 doctrine.DEBUG: "START TRANSACTION" [] []
 doctrine.DEBUG: DELETE FROM tomato WHERE id = ? [3] []
 doctrine.DEBUG: DELETE FROM delicious_pizza WHERE id = ? [3] []
+doctrine.DEBUG: "COMMIT" [] []
+```
+
+子Entity(tomato)をremove(`$em->remove($tomato)`)したときは、子Entity(tomato)のみDELETEしてくれる。
+```shell
+// dev.log
+doctrine.DEBUG: "COMMIT" [] []
+doctrine.DEBUG: "START TRANSACTION" [] []
+doctrine.DEBUG: INSERT INTO delicious_pizza (id) VALUES (null) [] []
+doctrine.DEBUG: INSERT INTO tomato (pizza_id) VALUES (?) {"1":4} []
+doctrine.DEBUG: "COMMIT" [] []
+doctrine.DEBUG: "START TRANSACTION" [] []
+doctrine.DEBUG: DELETE FROM tomato WHERE id = ? [4] []
 doctrine.DEBUG: "COMMIT" [] []
 ```
 
