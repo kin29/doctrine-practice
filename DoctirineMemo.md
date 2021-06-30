@@ -1,7 +1,7 @@
 # cascade={"remove"}、 onDelete="CASCADE"、 orphanRemoval=trueの違いメモ
 
 ## reference
-[https://tech.quartetcom.co.jp/2016/12/22/doctrine-cascade-remove/#4-orphanremovaltrue](https://tech.quartetcom.co.jp/2016/12/22/doctrine-cascade-remove/#4-orphanremovaltrue)
+[https://tech.quartetcom.co.jp/2016/12/22/doctrine-cascade-remove](https://tech.quartetcom.co.jp/2016/12/22/doctrine-cascade-remove)
 
 ## 目次
 - [どれも使わない時...(1)](#どれも使わない時1)
@@ -115,7 +115,7 @@ SQL(作成されたmigrations)をみると外部キー制約に`ON DELETE CASCAD
 + ALTER TABLE tomato ADD CONSTRAINT FK_2C14401AD41D1D42 FOREIGN KEY (pizza_id) REFERENCES delicious_pizza (id) ON DELETE CASCADE
 ```
 
-SQL的にはDELETE FROM delicious_pizza...しかしてないが、tomatoテーブルからもid=6は削除されていた。
+SQL的にはDELETE FROM delicious_pizza...しかしてないが、tomatoテーブルからもpizza_id=6は削除されていた。
 ```shell
 // bin/console d:m:diff & bin/console d:m:m実行後に
 // bin/console app:test実行
