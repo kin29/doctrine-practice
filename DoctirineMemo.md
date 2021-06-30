@@ -171,7 +171,11 @@ doctrine.DEBUG: "COMMIT" [] []
 ```
 
 ### cascade={"remove"}とorphanRemoval=trueの違い
-以下Command内容に変更実行すると違いがわかる
+以下Command内容を実行すると違いがわかる
+- デフォルトはorphanRemoval=false
+- orphanRemoval=trueで、親と紐付きがなくなった子Entityは削除される
+
+#### setTomatoesをsetしなおす
 ```php
 class TestCommand extends Command
 {
@@ -207,7 +211,7 @@ class TestCommand extends Command
 }
 ```
 
-#### cascade={"remove"}
+##### cascade={"remove"} (orphanRemoval=false)
 setし直す前のtomato(プチトマト)はDELETEされない
 ```shell
 // bin/console app:test実行後
@@ -231,7 +235,7 @@ mysql> select * from tomato;
 +----+----------+-----------------------+
 ```
 
-#### orphanRemoval=true
+##### orphanRemoval=true
 setし直す前のtomato(プチトマト)はDELETEされる
 ```shell
 // bin/console app:test実行後
@@ -253,4 +257,52 @@ mysql> select * from tomato;
 ...
 | 43 |       29 | フルーツトマト           |
 +----+----------+-----------------------+
+```
+
+#### collection->clear() したとき
+
+```php
+class TestCommand extends Command
+{
+    ...
+    protected function execute(InputInterface$input, OutputInterface $output): int
+    {
+        $pizza = new DeliciousPizza();
+        $tomato = new Tomato();
+        $tomato->setName('プチトマト');
+        $tomatoCollection = new ArrayCollection([$tomato]);
+        $pizza->setTomatoes($tomatoCollection);
+        $tomato->setPizza($pizza);
+
+        $this->em->persist($tomato);
+        $this->em->persist($pizza);
+        $this->em->flush();
+
+        $pizza->getTomatoes()->clear();
+        $this->em->persist($pizza);
+        $this->em->flush();
+
+        return Command::SUCCESS;
+    }
+```
+
+#### cascade={"remove"} (orphanRemoval=false)
+clear()してもプチトマトは削除されない
+```shell
+doctrine.DEBUG: "START TRANSACTION" [] []
+doctrine.DEBUG: INSERT INTO delicious_pizza (id) VALUES (null) [] []
+doctrine.DEBUG: INSERT INTO tomato (name, pizza_id) VALUES (?, ?) {"1":"プチトマト","2":36} []
+doctrine.DEBUG: "COMMIT" [] []
+```
+
+#### orphanRemoval=true
+clear()するとプチトマトは削除される
+```shell
+doctrine.DEBUG: "START TRANSACTION" [] []
+doctrine.DEBUG: INSERT INTO delicious_pizza (id) VALUES (null) [] []
+doctrine.DEBUG: INSERT INTO tomato (name, pizza_id) VALUES (?, ?) {"1":"プチトマト","2":35} [] (★)
+doctrine.DEBUG: "COMMIT" [] []
+doctrine.DEBUG: "START TRANSACTION" [] []
+doctrine.DEBUG: DELETE FROM tomato WHERE id = ? [51] [] //(★)が削除される
+doctrine.DEBUG: "COMMIT" [] []
 ```

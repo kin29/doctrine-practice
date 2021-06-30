@@ -35,17 +35,8 @@ class TestCommand extends Command
         $this->em->persist($pizza);
         $this->em->flush();
 
-        $tomato2 = new Tomato();
-        $tomato2->setName('フルーツトマト');
-        $tomatoCollection2 = new ArrayCollection([$tomato]);
-        $pizza->setTomatoes($tomatoCollection2);
-        $tomato2->setPizza($pizza);
-
-        $this->em->persist($tomato2);
+        $pizza->getTomatoes()->clear();
         $this->em->persist($pizza);
-
-        // データ削除
-        //$this->em->remove($pizza);
         $this->em->flush();
 
         return Command::SUCCESS;
