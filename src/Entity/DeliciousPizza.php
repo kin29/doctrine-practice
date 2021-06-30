@@ -20,9 +20,9 @@ class DeliciousPizza
     private ?int $id;
 
     /**
-     * @ORM\OneToMany(targetEntity=Tomato::class, mappedBy="pizza")
+     * @ORM\OneToMany(targetEntity=Tomato::class, mappedBy="pizza", cascade={"remove"})
      */
-    private Collection$tomatoes;
+    private Collection $tomatoes;
 
     public function __construct()
     {
