@@ -17,12 +17,12 @@ class DeliciousPizza
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
      */
-    private $id;
+    private ?int $id;
 
     /**
      * @ORM\OneToMany(targetEntity=Tomato::class, mappedBy="pizza")
      */
-    private $tomatoes;
+    private Collection$tomatoes;
 
     public function __construct()
     {
@@ -35,7 +35,7 @@ class DeliciousPizza
     }
 
     /**
-     * @return Collection|Tomato[]
+     * @return Collection
      */
     public function getTomatoes(): Collection
     {
