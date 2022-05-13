@@ -1,3 +1,32 @@
+# mappedBy, inversedBy
+- mappedBy, inversedByを使うことで双方向にできる、一方向(selfの時も)で良ければつけなくてok
+- :warning: mappedByは外部キーを保持する方に指定する
+  例) file.dir_idみたいにしたい時、file.dir_idにmappedByを指定する
+
+# JoinColumn
+- 外部キー名を指定する
+- `#[JoinColumn(name:"customer_id", referencedColumnName:"id")]`
+- つけないとデフォルト`#[JoinColumn(name: "_id", referencedColumnName: "id")]`が適用される
+
+# cascade=persist
+```
+<?php
+$user = new User();
+$myFirstComment = new Comment();
+$user->addComment($myFirstComment);
+
+$em->persist($user);
+$em->persist($myFirstComment); // required, if `cascade: persist` is not set
+$em->flush();
+```
+
+# orphanRemoval=true
+https://www.doctrine-project.org/projects/doctrine-orm/en/2.6/reference/working-with-associations.html#orphan-removal
+- >OrphanRemoval works with one-to-one, one-to-many and many-to-many associations.
+    - ManyToOneには使えない
+- >orphanRemoval = trueオプションを使用する場合、Doctrineは、エンティティが個人所有であり、他のエンティティによって再利用されないことを前提としています。 この仮定を怠ると、孤立したエンティティを別のエンティティに割り当てた場合でも、Doctrineによってエンティティが削除されます。
+
+
 # cascade={"remove"}、 onDelete="CASCADE"、 orphanRemoval=trueの違いメモ
 
 ## reference
