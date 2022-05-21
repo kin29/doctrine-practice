@@ -1,8 +1,8 @@
 # doctrine-practice
-aaaaaaaaa
+
 ## usage
 
-### preparate
+### prepare
 ```shell
 $ composer install
 ```
