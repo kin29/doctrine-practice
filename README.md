@@ -2,7 +2,7 @@
 
 ## usage
 
-### preparate
+### prepare
 ```shell
 $ composer install
 ```
