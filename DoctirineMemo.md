@@ -20,6 +20,131 @@ $em->persist($myFirstComment); // required, if `cascade: persist` is not set
 $em->flush();
 ```
 
+## 1. $em->persist($comment);しない & User::$commentsにcascade={"persist"}がないと以下のエラーになった。
+```shell
+$ cat src/Entity/User.php
+class User
+{
+    /**
+     * @ORM\OneToMany(targetEntity=Comment::class, mappedBy="user")
+     */
+    private Collection $comments;
+...
+
+$ cat src/Command/CascadePersistCommand.php
+   $user = new User();
+   $comment = new Comment();
+   $comment->setContent('コメント');
+   $user->addComment($comment);
+
+   $this->em->persist($user);
+   $this->em->flush();
+...
+
+$ bin/console app:cascade-persist
+
+In ORMInvalidArgumentException.php line 100:
+                                                                                                                                                                           
+  A new entity was found through the relationship 'App\Entity\User#comments' that was not configured to cascade persist operations for entity: App\Entity\Comment@385. To  
+   solve this issue: Either explicitly call EntityManager#persist() on this unknown entity or configure cascade persist this association in the mapping for example @Many  
+  ToOne(..,cascade={"persist"}). If you cannot find out which entity causes the problem implement 'App\Entity\Comment#__toString()' to get a clue.                         
+                                                                                                                                                                           
+
+app:cascade-persist
+
+```
+
+## 2. $em->persist($comment);追記 & User::$commentsにcascade={"persist"}がない
+```shell
+$ cat src/Entity/User.php
+class User
+{
+    /**
+     * @ORM\OneToMany(targetEntity=Comment::class, mappedBy="user")
+     */
+    private Collection $comments;
+...
+
+$ cat src/Command/CascadePersistCommand.php
+   $user = new User();
+   $comment = new Comment();
+   $comment->setContent('コメント');
+   $user->addComment($comment);
+
+   $this->em->persist($user);
+   $this->em->persist($comment); // <- 追記
+   $this->em->flush();
+...
+
+$ bin/console app:cascade-persist
+```
+結果
+```shell
+mysql> select * from comment;
++----+---------+--------------+
+| id | user_id | content      |
++----+---------+--------------+
+|  1 |       1 | コメント     |
++----+---------+--------------+
+1 row in set (0.00 sec)
+
+mysql> select * from user;
++----+
+| id |
++----+
+|  1 |
++----+
+1 row in set (0.00 sec)
+```
+
+## 3. $em->persist($comment);なし & User::$commentsにcascade={"persist"}がある
+2と同じ感じになる
+```shell
+$ cat src/Entity/User.php
+class User
+{
+    /**
+     * @ORM\OneToMany(targetEntity=Comment::class, mappedBy="user", cascade={"persist"}) // <- 追記
+     */
+    private Collection $comments;
+...
+
+$ cat src/Command/CascadePersistCommand.php
+   $user = new User();
+   $comment = new Comment();
+   $comment->setContent('コメント');
+   $user->addComment($comment);
+
+   $this->em->persist($user);
+   //$this->em->persist($comment);
+   $this->em->flush();
+...
+
+$ bin/console app:cascade-persist
+```
+
+結果
+```shell
+
+mysql> select * from user;
++----+
+| id |
++----+
+|  1 |
+|  2 |
++----+
+2 rows in set (0.00 sec)
+
+mysql> select * from comment;
++----+---------+--------------+
+| id | user_id | content      |
++----+---------+--------------+
+|  1 |       1 | コメント     |
+|  2 |       2 | コメント     |
++----+---------+--------------+
+2 rows in set (0.00 sec)
+```
+
 # orphanRemoval=true
 https://www.doctrine-project.org/projects/doctrine-orm/en/2.6/reference/working-with-associations.html#orphan-removal
 - >OrphanRemoval works with one-to-one, one-to-many and many-to-many associations.
@@ -33,11 +158,11 @@ https://www.doctrine-project.org/projects/doctrine-orm/en/2.6/reference/working-
 [https://tech.quartetcom.co.jp/2016/12/22/doctrine-cascade-remove](https://tech.quartetcom.co.jp/2016/12/22/doctrine-cascade-remove)
 
 ## 目次
-- [どれも使わない時...(1)](#どれも使わない時1)
+- [どれも使わない時...(1)](#どれも使わない時...(1))
 - [cascade={"remove"}...(2)](#cascaderemove2)
 - [onDelete="CASCADE...(3)](#ondeletecascade3)
 - [orphanRemoval=true...(4)](#orphanremovaltrue4)
-- [cascade={"remove"}とorphanRemoval=trueの違い](#wipcascaderemoveとorphanremovaltrueの違い)
+- [cascade={"remove"}とorphanRemoval=trueの違い](#cascaderemoveとorphanremovaltrueの違い)
 
 の4パターンで、以下Commandを実行
 ```shell
@@ -75,7 +200,7 @@ doctrine.DEBUG: "COMMIT" [] []
 doctrine.DEBUG: "START TRANSACTION" [] []
 doctrine.DEBUG: DELETE FROM delicious_pizza WHERE id = ? [2] []
 doctrine.DEBUG: "ROLLBACK" [] []
-console.CRITICAL: Error thrown while running command "app:test". Message: "An exception occurred while executing 'DELETE FROM delicious_pizza WHERE id = ?' with params [2]:  SQLSTATE[23000]: Integrity constraint violation: 1451 Cannot delete or update a parent row: a foreign key constraint fails (`doctrine_practice`.`tomato`, CONSTRAINT `FK_2C14401AD41D1D42` FOREIGN KEY (`pizza_id`) REFERENCES `delicious_pizza` (`id`))" {"exception":"[object] (Doctrine\\DBAL\\Exception\\ForeignKeyConstraintViolationException(code: 0): An exception occurred while executing 'DELETE FROM delicious_pizza WHERE id = ?' with params [2]:\n\nSQLSTATE[23000]: Integrity constraint violation: 1451 Cannot delete or update a parent row: a foreign key constraint fails (`doctrine_practice`.`tomato`, CONSTRAINT `FK_2C14401AD41D1D42` FOREIGN KEY (`pizza_id`) REFERENCES `delicious_pizza` (`id`)) at /Users/shigaayano/doctrine-practice/vendor/doctrine/dbal/lib/Doctrine/DBAL/Driver/AbstractMySQLDriver.php:68)\n[previous exception] [object] (Doctrine\\DBAL\\Driver\\PDO\\Exception(code: 23000): SQLSTATE[23000]: Integrity constraint violation: 1451 Cannot delete or update a parent row: a foreign key constraint fails (`doctrine_practice`.`tomato`, CONSTRAINT `FK_2C14401AD41D1D42` FOREIGN KEY (`pizza_id`) REFERENCES `delicious_pizza` (`id`)) at /Users/shigaayano/doctrine-practice/vendor/doctrine/dbal/lib/Doctrine/DBAL/Driver/PDO/Exception.php:18)\n[previous exception] [object] (PDOException(code: 23000): SQLSTATE[23000]: Integrity constraint violation: 1451 Cannot delete or update a parent row: a foreign key constraint fails (`doctrine_practice`.`tomato`, CONSTRAINT `FK_2C14401AD41D1D42` FOREIGN KEY (`pizza_id`) REFERENCES `delicious_pizza` (`id`)) at /Users/shigaayano/doctrine-practice/vendor/doctrine/dbal/lib/Doctrine/DBAL/Driver/PDOStatement.php:112)","command":"app:test","message":"An exception occurred while executing 'DELETE FROM delicious_pizza WHERE id = ?' with params [2]:\n\nSQLSTATE[23000]: Integrity constraint violation: 1451 Cannot delete or update a parent row: a foreign key constraint fails (`doctrine_practice`.`tomato`, CONSTRAINT `FK_2C14401AD41D1D42` FOREIGN KEY (`pizza_id`) REFERENCES `delicious_pizza` (`id`))"} []
+console.CRITICAL: Error thrown while running command "app:test". Message: "An exception occurred while executing 'DELETE FROM delicious_pizza WHERE id = ?' with params [2]:  SQLSTATE[23000]: Integrity constraint violation: 1451 Cannot delete or update a parent row: a foreign key constraint fails (`doctrine_practice`.`tomato`, CONSTRAINT `FK_2C14401AD41D1D42` FOREIGN KEY (`pizza_id`) REFERENCES `delicious_pizza` (`id`))" {"exception":"[object] (Doctrine\\DBAL\\Exception\\ForeignKeyConstraintViolationException(code: 0): An exception occurred while executing 'DELETE FROM delicious_pizza WHERE id = ?' with params [2]:\n\nSQLSTATE[23000]: Integrity constraint violation: 1451 Cannot delete or update a parent row: a foreign key constraint fails (`doctrine_practice`.`tomato`, CONSTRAINT `FK_2C14401AD41D1D42` FOREIGN KEY (`pizza_id`) REFERENCES `delicious_pizza` (`id`)) at /Users/kin29/doctrine-practice/vendor/doctrine/dbal/lib/Doctrine/DBAL/Driver/AbstractMySQLDriver.php:68)\n[previous exception] [object] (Doctrine\\DBAL\\Driver\\PDO\\Exception(code: 23000): SQLSTATE[23000]: Integrity constraint violation: 1451 Cannot delete or update a parent row: a foreign key constraint fails (`doctrine_practice`.`tomato`, CONSTRAINT `FK_2C14401AD41D1D42` FOREIGN KEY (`pizza_id`) REFERENCES `delicious_pizza` (`id`)) at /Users/kin29/doctrine-practice/vendor/doctrine/dbal/lib/Doctrine/DBAL/Driver/PDO/Exception.php:18)\n[previous exception] [object] (PDOException(code: 23000): SQLSTATE[23000]: Integrity constraint violation: 1451 Cannot delete or update a parent row: a foreign key constraint fails (`doctrine_practice`.`tomato`, CONSTRAINT `FK_2C14401AD41D1D42` FOREIGN KEY (`pizza_id`) REFERENCES `delicious_pizza` (`id`)) at /Users/kin29/doctrine-practice/vendor/doctrine/dbal/lib/Doctrine/DBAL/Driver/PDOStatement.php:112)","command":"app:test","message":"An exception occurred while executing 'DELETE FROM delicious_pizza WHERE id = ?' with params [2]:\n\nSQLSTATE[23000]: Integrity constraint violation: 1451 Cannot delete or update a parent row: a foreign key constraint fails (`doctrine_practice`.`tomato`, CONSTRAINT `FK_2C14401AD41D1D42` FOREIGN KEY (`pizza_id`) REFERENCES `delicious_pizza` (`id`))"} []
 console.DEBUG: Command "app:test" exited with code "1" {"command":"app:test","code":1} []
 ```
 
