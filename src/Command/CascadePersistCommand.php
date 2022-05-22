@@ -34,7 +34,7 @@ class CascadePersistCommand extends Command
         $comment->setContent('コメント');
         $user->addComment($comment);
 
-        $this->em->persist($user);
+        $this->em->persist($user); //User::$commentsにcascade=persistがあれば、$this->em->persist($comment);は不要
         $this->em->flush();
 
         return Command::SUCCESS;

@@ -20,7 +20,7 @@ class User
     private ?int $id;
 
     /**
-     * @ORM\OneToMany(targetEntity=Comment::class, mappedBy="user")
+     * @ORM\OneToMany(targetEntity=Comment::class, mappedBy="user", cascade={"persist"})
      */
     private Collection $comments;
 
