@@ -5,28 +5,20 @@ namespace App\Entity;
 use App\Repository\TomatoRepository;
 use Doctrine\ORM\Mapping as ORM;
 
-/**
- * @ORM\Entity(repositoryClass=TomatoRepository::class)
- */
+#[ORM\Entity(repositoryClass: TomatoRepository::class)]
 class Tomato
 {
-    /**
-     * @ORM\Id
-     * @ORM\GeneratedValue
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
     private ?int $id;
 
-    /**
-     * @ORM\ManyToOne(targetEntity=DeliciousPizza::class, inversedBy="tomatoes")
-     * @ORM\JoinColumn(name="pizza_id", referencedColumnName="id")
-     */
+    #[ORM\ManyToOne(targetEntity: DeliciousPizza::class, inversedBy: 'tomatoes')]
+    #[ORM\JoinColumn(name: 'pizza_id', referencedColumnName: 'id')]
     private ?DeliciousPizza $pizza;
 
-    /**
-     * @ORM\Column(type="string", length=255)
-     */
-    private $name;
+    #[ORM\Column(type: 'string', length: 225)]
+    private string $name;
 
     public function getId(): ?int
     {
@@ -38,7 +30,7 @@ class Tomato
         return $this->pizza;
     }
 
-    public function setPizza(?DeliciousPizza $pizza): self
+    public function setPizza(?DeliciousPizza $pizza): Tomato
     {
         $this->pizza = $pizza;
 
@@ -50,7 +42,7 @@ class Tomato
         return $this->name;
     }
 
-    public function setName(string $name): self
+    public function setName(string $name): Tomato
     {
         $this->name = $name;
 

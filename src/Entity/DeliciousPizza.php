@@ -7,21 +7,15 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
-/**
- * @ORM\Entity(repositoryClass=DeliciousPizzaRepository::class)
- */
+#[ORM\Entity(repositoryClass: DeliciousPizzaRepository::class)]
 class DeliciousPizza
 {
-    /**
-     * @ORM\Id
-     * @ORM\GeneratedValue
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
     private ?int $id;
 
-    /**
-     * @ORM\OneToMany(targetEntity=Tomato::class, mappedBy="pizza", orphanRemoval=true)
-     */
+    #[ORM\OneToMany(mappedBy: 'pizza', targetEntity: Tomato::class, orphanRemoval: true)]
     private Collection $tomatoes;
 
     public function __construct()
