@@ -10,9 +10,9 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class TestCommand extends Command
+class PersistTestCommand extends Command
 {
-    protected static $defaultName = 'app:test';
+    protected static $defaultName = 'app:persist:test';
 
     private EntityManagerInterface $em;
 
@@ -24,20 +24,20 @@ class TestCommand extends Command
 
     protected function execute(InputInterface$input, OutputInterface $output): int
     {
-        $pizza = new DeliciousPizza();
         $tomato = new Tomato();
         $tomato->setName('プチトマト');
-        $tomatoCollection = new ArrayCollection([$tomato]);
-        $pizza->setTomatoes($tomatoCollection);
+
+        $pizza = new DeliciousPizza();
+        $pizza->setTomatoes(new ArrayCollection([$tomato]));
+
         $tomato->setPizza($pizza);
 
-        $this->em->persist($tomato);
+//        $this->em->persist($tomato); //DeliciousPizza::$tomatoに、cascade=persistがあれば不要なためコメントアウト
         $this->em->persist($pizza);
         $this->em->flush();
 
-        $pizza->getTomatoes()->clear();
-        $this->em->persist($pizza);
-        $this->em->flush();
+        //INSERT INTO delicious_pizza (id) VALUES (null) (parameters: array[], types: array[]) {"sql":"INSERT INTO delicious_pizza (id) VALUES (null)","params":[],"types":[]} []
+        //INSERT INTO tomato (name, pizza_id) VALUES (?, ?) (parameters: array{"1":"プチトマト","2":8}, types: array{"1":2,"2":1}) {"sql":"INSERT INTO tomato (name, pizza_id) VALUES (?, ?)","params":{"1":"プチトマト","2":8},"types":{"1":2,"2":1}} []
 
         return Command::SUCCESS;
     }

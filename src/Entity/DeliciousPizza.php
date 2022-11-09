@@ -18,7 +18,7 @@ class DeliciousPizza
     #[ORM\Column(type: 'integer')]
     private ?int $id;
 
-    #[ORM\OneToMany(mappedBy: 'pizza', targetEntity: Tomato::class, orphanRemoval: true)]
+    #[ORM\OneToMany(mappedBy: 'pizza', targetEntity: Tomato::class, cascade: ['persist'], orphanRemoval: true)]
     private Collection $tomatoes;
 
     public function __construct()
